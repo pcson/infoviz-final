@@ -1,0 +1,13 @@
+svg g.flat.top rect {
+  stroke: black;
+  stroke-width: 2px;
+}
+svg g.flat.top rect.what {
+  fill: red;
+}
+svg g.flat.top rect.steve {
+  fill: blue;
+}
+svg g.flat.top rect.fine {
+  fill: orange;
+}

@@ -1,0 +1,27 @@
+[
+    {
+        "id": "chapter01",
+        "character": "steve",
+        "words": 50
+    },
+    {
+        "id": "chapter02",
+        "character": "what",
+        "words": 200
+    },
+    {
+        "id": "chapter03",
+        "character": "fine",
+        "words": 95
+    },
+    {
+        "id": "chapter04",
+        "character": "what",
+        "words": 150
+    },
+    {
+        "id": "chapter05",
+        "character": "steve",
+        "words": 225
+    }
+]
