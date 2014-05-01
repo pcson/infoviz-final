@@ -99,7 +99,7 @@ d3.json("js/data.json", function(error, json) {
     function makeDots(d,i){
         var tlinec = timelineWidth(povw) / 2;
         // draw dots in corresponding rows on the timelines
-        var tline = d3.select("g.pov g." + d.character);
+        var tline = d3.select("g.pov g." + charToClass(d.narrator));
         tline.append("circle")
             .datum(d)
             .attr('r', 10)
@@ -118,7 +118,7 @@ d3.json("js/data.json", function(error, json) {
     }
 
     function makeTensionLines(d,i){
-        var tline = d3.select("g.tension g." + d.character);
+        var tline = d3.select("g.tension g." + charToClass(d.narrator));
         // add points to each tline, i have no idea
     }
 
@@ -130,6 +130,10 @@ d3.json("js/data.json", function(error, json) {
         // do that
     }
 
+    function charToClass(name){
+        return name.trim().replace(' ', '_').toLowerCase();
+    }
+
 
     //*********************************************
     // start making shit
@@ -139,7 +143,7 @@ d3.json("js/data.json", function(error, json) {
         .data(narrators)
         .enter()
         .append("g")
-        .attr("class", function(d){return d.key + " timeline";})
+        .attr("class", function(d){return charToClass(d.key) + " timeline";})
         .attr("transform", function(d,i){
             console.log(this.parentNode);
             if (d3.select(this.parentNode).classed("pov")){
@@ -159,7 +163,7 @@ d3.json("js/data.json", function(error, json) {
             .attr("x", pad)
             .attr("width", flatw - pad*2)
             .attr("class", function(d){
-                return d.character;
+                return charToClass(d.narrator);
             })
             .attr("height", function(d){
                 return flatBarScale(d.words);
