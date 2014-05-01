@@ -1,14 +1,22 @@
-// initialize the svg
-var w = 1200, h = 650, barw = 25, pad = 10;
+// define some dimensions for padding and proportions
+var grid = 12, col = 100, w = col * grid, h = 650, pad = 10;
+// panel widths
+var povw = col * 4, tensionw = col * 5, flatw = col * 1, outlinew = col * 2; // multipliers should add up to grid
 
+// initialize the svg
 var svg = d3.select("body").insert("svg", "script:first-of-type");
 svg.attr({"width": w, "height": h});
-var pov = svg.append('g').attr("class", "pov top");
-var tension = svg.append('g').attr("class", "tension top").attr("transform", "translate("+ (w/3) +",0)");
-var flat = svg.append('g').attr("class", "flat top").attr("transform", "translate("+ (w/3)*2 +",0)");
-var outline = svg.append('g').attr("class", "outline top").attr("transform", "translate("+ ((w/3)*2 + barw + pad) +",0)");
 
-// get the data async
+// add the panels for each viz
+var pov = svg.append('g').attr("class", "pov top");
+var tension = svg.append('g').attr("class", "tension top").attr("transform", "translate("+ (povw) +",0)");
+var flat = svg.append('g').attr("class", "flat top").attr("transform", "translate("+ (povw + tensionw) +",0)");
+var outline = svg.append('g').attr("class", "outline top").attr("transform", "translate("+ (povw + tensionw + flatw) +",0)");
+
+// add static elements (axes and labels and shit like that)
+// code tk
+
+// get the data async and populate the viz
 var data;
 d3.json("js/fake.json", function(error, json) {
     if (error) return console.warn(error);
@@ -32,32 +40,42 @@ d3.json("js/fake.json", function(error, json) {
     //***********************************
     // scales
 
-    var tlinew = ((w / 3) - (pad * 2)) / narrators.length;
-
-    var tlinec = tlinew / 2;
-
-    var flatScale = d3.scale.linear()
+    var flatBarScale = d3.scale.linear()
         .domain([0, json[json.length - 1].base + json[json.length - 1].words ])
         .range([0, h]);
 
-    var thirdscale = d3.scale.linear()
-        .domain([0, narrators.length - 1]) // i of narrators
-        .range([pad, w / 3 - pad - tlinew]);
+    function vScaleCenter(d,i){
+        // aligned with centers of flatBarScale segments
+        return flatBarScale(d.base) + (flatBarScale(d.words) / 2);
+    }
+
+    function timelineWidth(panelw) {
+        return (panelw - (pad * 2)) / narrators.length;
+    }
+
+    function makePanelScale(panelw){
+        // helper function for code reuse to scale to panel widths
+        return d3.scale.linear()
+            .domain([0, narrators.length - 1]) // accepts i of narrators
+            .range([pad, panelw - pad - timelineWidth(panelw)]);
+    }
+
+    var povScale = makePanelScale(povw);
+    var tensionScale = makePanelScale(tensionw);
+    var outlineScale = makePanelScale(outlinew);
 
 
     //**************************************
     // functions
     function makeDots(d,i){
+        var tlinec = timelineWidth(povw) / 2;
         // draw dots in corresponding rows on the timelines
         var tline = d3.select("g.pov g." + d.character);
         tline.append("circle")
             .datum(d)
             .attr('r', 10)
             .attr('cx', tlinec)
-            .attr('cy', function(d){
-                // align to center
-                return flatScale(d.base) + (flatScale(d.words) / 2);
-            });
+            .attr('cy', vScaleCenter);
     }
 
     function makeOutline(d,i){
@@ -66,60 +84,63 @@ d3.json("js/fake.json", function(error, json) {
             .text(function(d){
                 return d.id;
             })
-            .attr("y", function(d){
-                // align to center
-                return flatScale(d.base) + (flatScale(d.words) / 2);
-            })
+            .attr("y", vScaleCenter)
+    }
+
+    function makeTensionLines(d,i){
+        var tline = d3.select("g.tension g." + d.character);
+        // add points to each tline, i have no idea
+    }
+
+    function makeThemes(d,i) {
+        // do that
+    }
+
+    function makeContextualPopup(d,i){
+        // do that
     }
 
 
     //*********************************************
     // start making shit
 
-    // timeline groups: one for each narrator
-    var timelines = d3.selectAll("g.pov, g.tension").selectAll('g')
+    // timelines in pov and tension panels: one for each narrator
+    d3.selectAll("g.pov, g.tension").selectAll('g')
         .data(narrators)
         .enter()
         .append("g")
-        .attr('class', function(d){
-        return d.key;
-        })
+        .attr("class", function(d){return d.key + " timeline";})
         .attr("transform", function(d,i){
-            return "translate(" + thirdscale(i) + ",0)";
+            console.log(this.parentNode);
+            if (d3.select(this.parentNode).classed("pov")){
+                var shift = povScale(i);
+            } else if (d3.select(this.parentNode).classed("tension")){
+                var shift = tensionScale(i);
+            }
+            return "translate(" + shift + ",0)";
         });
 
-    // how many elements in each ?
-    // timelines.selectAll("text")
-    //     .data(function(d,i){
-    //         return d.values;
-    //     })
-    //     .enter()
-    //     .append("text")
-    //     .text(function(d,i){
-    //         console.log(d);
-    //         return d.id;
-    //     })
-    //     .attr('y', function(d,i){
-    //         return 15 + (15 *i);
-    //     });
-
-
     // flat bar
-    // this loop populates all the other panels
+    // this loop populates all the other panels because the bar has everything
     flat.selectAll("rect")
         .data(json)
         .enter()
         .append("rect")
-            .attr("width", barw)
+            .attr("x", pad)
+            .attr("width", flatw - pad*2)
             .attr("class", function(d){
                 return d.character;
             })
             .attr("height", function(d){
-                return flatScale(d.words);
+                return flatBarScale(d.words);
             })
             .attr("y", function(d){
-                return flatScale(d.base);
+                return flatBarScale(d.base);
             })
             .each(makeDots) // fill in timelines
-            .each(makeOutline); // fill in text outline
+            .each(makeOutline) // fill in text outline
+            .each(makeTensionLines) // fill in tension lines
+            .each(makeThemes) // fill in theme tags
+            .each(makeContextualPopup); // fill in contextual info for hover/click
+            // todo: make segments draggable
 });
