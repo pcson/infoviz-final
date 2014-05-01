@@ -41,16 +41,26 @@ d3.json("js/data.json", function(error, json) {
     //************************************
     // data wrangling
 
-    // add baseline shift to data for stacking
-    var baseline = 0;
+    // swap median word count for placeholder value
+    var wordcounts = [];
     json.forEach(function(d){
+        if (d.words != 10) wordcounts.push(d.words);
+    })
+
+    var mediancount = d3.median(wordcounts);
+    var baseline = 0;
+
+    json.forEach(function(d){
+        if (d.words == 10) d.words = mediancount;
+
+        // add baseline shift to data for stacking
         d.base = baseline;
         baseline += +d.words;
-    });
+    })
 
     // nest the data by narrator to make character timelines
-    var narrators = d3.nest()
-        .key(function(d){ return d.character; })
+    narrators = d3.nest()
+        .key(function(d){ return d.narrator; })
         .entries(json);
 
 
