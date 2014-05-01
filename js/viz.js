@@ -91,6 +91,8 @@ d3.json("js/data.json", function(error, json) {
     var tensionScale = makePanelScale(tensionw);
     var outlineScale = makePanelScale(outlinew);
 
+    var colorScale = d3.scale.category10(); // temporary; will choose real colors later
+
 
     //**************************************
     // functions
@@ -102,7 +104,8 @@ d3.json("js/data.json", function(error, json) {
             .datum(d)
             .attr('r', 10)
             .attr('cx', tlinec)
-            .attr('cy', vScaleCenter);
+            .attr('cy', vScaleCenter)
+            .attr('fill', colorScale(d.narrator));
     }
 
     function makeOutline(d,i){
@@ -163,6 +166,9 @@ d3.json("js/data.json", function(error, json) {
             })
             .attr("y", function(d){
                 return flatBarScale(d.base);
+            })
+            .attr("fill", function(d){
+                return colorScale(d.narrator);
             })
             .each(makeDots) // fill in timelines
             .each(makeOutline) // fill in text outline
