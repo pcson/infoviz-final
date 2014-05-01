@@ -34,8 +34,8 @@ var outline = svg.append('g').attr("class", "outline top").attr("transform", "tr
 // code tk
 
 // get the data async and populate the viz
-var data;
-d3.json("js/fake.json", function(error, json) {
+var data, narrators;
+d3.json("js/data.json", function(error, json) {
     if (error) return console.warn(error);
 
     //************************************
