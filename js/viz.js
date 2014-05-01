@@ -102,7 +102,7 @@ d3.json("js/data.json", function(error, json) {
         var tline = d3.select("g.pov g." + charToClass(d.narrator));
         tline.append("circle")
             .datum(d)
-            .attr('r', 10)
+            .attr('r', 7)
             .attr('cx', tlinec)
             .attr('cy', vScaleCenter)
             .attr('fill', colorScale(d.narrator));
@@ -145,7 +145,6 @@ d3.json("js/data.json", function(error, json) {
         .append("g")
         .attr("class", function(d){return charToClass(d.key) + " timeline";})
         .attr("transform", function(d,i){
-            console.log(this.parentNode);
             if (d3.select(this.parentNode).classed("pov")){
                 var shift = povScale(i);
             } else if (d3.select(this.parentNode).classed("tension")){
