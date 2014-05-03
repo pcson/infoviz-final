@@ -46,7 +46,7 @@ d3.json("js/data.json", function(error, json) {
     json.forEach(function(d){
         if (d.words != 10) wordcounts.push(d.words);
     })
-
+    // console.log(wordcounts);
     var mediancount = d3.median(wordcounts);
     var baseline = 0;
 
@@ -60,7 +60,7 @@ d3.json("js/data.json", function(error, json) {
 
     // nest the data by narrator to make character timelines
     narrators = d3.nest()
-        .key(function(d){ return d.narrator; })
+        .key(function(d){ return d.narrator.toLowerCase(); })
         .entries(json);
 
 
@@ -71,7 +71,7 @@ d3.json("js/data.json", function(error, json) {
         .domain([0, json[json.length - 1].base + json[json.length - 1].words ])
         .range([0, h]);
 
-    function vScaleCenter(d,i){
+    function vScaleCenter(d){
         // aligned with centers of flatBarScale segments
         return flatBarScale(d.base) + (flatBarScale(d.words) / 2);
     }
@@ -79,6 +79,8 @@ d3.json("js/data.json", function(error, json) {
     function timelineWidth(panelw) {
         return (panelw - (pad * 2)) / narrators.length;
     }
+
+    var tlinec = timelineWidth(povw) / 2;
 
     function makePanelScale(panelw){
         // helper function for code reuse to scale to panel widths
@@ -92,13 +94,17 @@ d3.json("js/data.json", function(error, json) {
     var outlineScale = makePanelScale(outlinew);
 
     var colorScale = d3.scale.category10(); // temporary; will choose real colors later
-
+    var narratorlist = [];
+    narrators.forEach(function(d,i,a){
+        narratorlist.push(charToClass(d.key));
+    });
+    colorScale.domain(narratorlist);
 
     //**************************************
     // functions
+
+
     function makeDots(d,i){
-        var tlinec = timelineWidth(povw) / 2;
-        // draw dots in corresponding rows on the timelines
         var tline = d3.select("g.pov g." + charToClass(d.narrator));
         tline.append("circle")
             .datum(d)
