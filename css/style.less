@@ -4,21 +4,28 @@
 @w: 1200px;
 @h: 650px;
 @grid: (@w / 10);
+@grey: #767676;
+
+// settings
 svg {
-    
+    line.axis {
+        stroke: @grey;
+        stroke-width: 1;
+        stroke-dasharray: 1,3;
+        shape-rendering: crispEdges;
+    }
+
+    g.pov {
+        path.pov {
+            fill: none;
+            stroke: @grey;
+        }
+    }
+
     g.flat.top {
         rect {
-            stroke: black;
+            stroke: @grey;
             stroke-width: 2px;
-            &.what {
-                fill: red;
-            }
-            &.steve {
-                fill: blue;
-            }
-            &.fine {
-                fill: orange;
-            }
         }
     }
 }

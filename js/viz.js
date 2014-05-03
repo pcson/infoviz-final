@@ -46,7 +46,7 @@ d3.json("js/data.json", function(error, json) {
     json.forEach(function(d){
         if (d.words != 10) wordcounts.push(d.words);
     })
-
+    // console.log(wordcounts);
     var mediancount = d3.median(wordcounts);
     var baseline = 0;
 
@@ -60,7 +60,7 @@ d3.json("js/data.json", function(error, json) {
 
     // nest the data by narrator to make character timelines
     narrators = d3.nest()
-        .key(function(d){ return d.narrator; })
+        .key(function(d){ return d.narrator.toLowerCase(); })
         .entries(json);
 
 
@@ -69,9 +69,9 @@ d3.json("js/data.json", function(error, json) {
 
     var flatBarScale = d3.scale.linear()
         .domain([0, json[json.length - 1].base + json[json.length - 1].words ])
-        .range([0, h]);
+        .range([pad, h - pad]);
 
-    function vScaleCenter(d,i){
+    function vScaleCenter(d){
         // aligned with centers of flatBarScale segments
         return flatBarScale(d.base) + (flatBarScale(d.words) / 2);
     }
@@ -79,6 +79,9 @@ d3.json("js/data.json", function(error, json) {
     function timelineWidth(panelw) {
         return (panelw - (pad * 2)) / narrators.length;
     }
+
+    var pov_tlinec = timelineWidth(povw) / 2;
+    var tension_tlinec = timelineWidth(tensionw) / 2;
 
     function makePanelScale(panelw){
         // helper function for code reuse to scale to panel widths
@@ -92,20 +95,44 @@ d3.json("js/data.json", function(error, json) {
     var outlineScale = makePanelScale(outlinew);
 
     var colorScale = d3.scale.category10(); // temporary; will choose real colors later
+    var narratorlist = [];
+    narrators.forEach(function(d,i,a){
+        narratorlist.push(charToClass(d.key));
+    });
+    colorScale.domain(narratorlist);
+
+    var tensionLineWidth = d3.scale.linear()
+        .domain([0,7])
+        .range([0, tension_tlinec]);
 
 
     //**************************************
     // functions
+
     function makeDots(d,i){
-        var tlinec = timelineWidth(povw) / 2;
-        // draw dots in corresponding rows on the timelines
         var tline = d3.select("g.pov g." + charToClass(d.narrator));
+
+        // draw dots in corresponding rows on the timelines for narrators
         tline.append("circle")
             .datum(d)
-            .attr('r', 7)
-            .attr('cx', tlinec)
+            .attr('r', 6)
+            .attr('opacity', 0.9)
+            .attr('cx', pov_tlinec)
             .attr('cy', vScaleCenter)
-            .attr('fill', colorScale(d.narrator));
+            .attr('fill', colorScale(charToClass(d.narrator)));
+
+        // draw smaller character dots
+        d.characters.forEach(function(c,i,a){
+            if (narratorlist.indexOf(charToClass(c)) == -1) return false;
+            var tline = d3.select("g.pov g." + charToClass(c));
+            tline.append("circle")
+                .datum(d)
+                .attr('r', 3)
+                .attr('opacity', 0.4)
+                .attr('cx', pov_tlinec)
+                .attr('cy', vScaleCenter)
+                .attr('fill', colorScale(charToClass(c)));
+        });
     }
 
     function makeOutline(d,i){
@@ -115,11 +142,6 @@ d3.json("js/data.json", function(error, json) {
                 return d.id;
             })
             .attr("y", vScaleCenter)
-    }
-
-    function makeTensionLines(d,i){
-        var tline = d3.select("g.tension g." + charToClass(d.narrator));
-        // add points to each tline, i have no idea
     }
 
     function makeThemes(d,i) {
@@ -153,8 +175,42 @@ d3.json("js/data.json", function(error, json) {
             return "translate(" + shift + ",0)";
         });
 
+    d3.selectAll('g.pov g.timeline')
+        .append('line')
+        .attr('x1', pov_tlinec)
+        .attr('y1', pad)
+        .attr('x2', pov_tlinec)
+        .attr('y2', function(d,i){
+            return flatBarScale.range()[1];
+        })
+        .attr('class', 'axis');
+
+    d3.selectAll('g.tension g.timeline')
+        .append('line')
+        .attr('x1', tension_tlinec)
+        .attr('y1', pad)
+        .attr('x2', tension_tlinec)
+        .attr('y2', function(d,i){
+            return flatBarScale.range()[1];
+        })
+        .attr('class', 'axis');
+
+    // make pov path
+    // path generator
+    var povline = d3.svg.line()
+        .x(function(d){
+            return povScale(narratorlist.indexOf(charToClass(d.narrator))) + pov_tlinec;
+        })
+        .y(vScaleCenter)
+        .interpolate('linear');
+
+    pov.datum(json)
+        .append("path")
+        .attr("d", povline)
+        .attr("class", "pov");
+
     // flat bar
-    // this loop populates all the other panels because the bar has everything
+    // this loop populates the other panels because the bar has everything
     flat.selectAll("rect")
         .data(json)
         .enter()
@@ -171,12 +227,32 @@ d3.json("js/data.json", function(error, json) {
                 return flatBarScale(d.base);
             })
             .attr("fill", function(d){
-                return colorScale(d.narrator);
+                return colorScale(charToClass(d.narrator));
             })
             .each(makeDots) // fill in timelines
             .each(makeOutline) // fill in text outline
-            .each(makeTensionLines) // fill in tension lines
             .each(makeThemes) // fill in theme tags
             .each(makeContextualPopup); // fill in contextual info for hover/click
             // todo: make segments draggable
+
+    // draw tension lines
+    tension.selectAll('g.timeline')
+        .datum(function(d){return d.values;})
+        .append("polygon")
+        .attr("points", function(d){
+            var points = ""
+            d.forEach(function(c,i,a){
+                points += (tension_tlinec - tensionLineWidth(c.tension));
+                points += " " + vScaleCenter(c) + " ";
+            });
+            d.reverse();
+            d.forEach(function(c,i,a){
+                points += (tension_tlinec + tensionLineWidth(c.tension));
+                points += " " + vScaleCenter(c) + " ";
+            });
+            d.reverse();
+            return points;
+        })
+        .attr("fill", function(d){ return colorScale(charToClass(d[0].narrator)); })
+        .attr("stroke", function(d){ return colorScale(charToClass(d[0].narrator)); });
 });
