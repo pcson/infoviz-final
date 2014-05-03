@@ -109,16 +109,15 @@ d3.json("js/data.json", function(error, json) {
     //**************************************
     // functions
 
-
     function makeDots(d,i){
         var tline = d3.select("g.pov g." + charToClass(d.narrator));
 
         // draw dots in corresponding rows on the timelines for narrators
         tline.append("circle")
             .datum(d)
-            .attr('r', 7)
+            .attr('r', 6)
             .attr('opacity', 0.9)
-            .attr('cx', tlinec)
+            .attr('cx', pov_tlinec)
             .attr('cy', vScaleCenter)
             .attr('fill', colorScale(charToClass(d.narrator)));
 
@@ -128,9 +127,9 @@ d3.json("js/data.json", function(error, json) {
             var tline = d3.select("g.pov g." + charToClass(c));
             tline.append("circle")
                 .datum(d)
-                .attr('r', 4)
+                .attr('r', 3)
                 .attr('opacity', 0.4)
-                .attr('cx', tlinec)
+                .attr('cx', pov_tlinec)
                 .attr('cy', vScaleCenter)
                 .attr('fill', colorScale(charToClass(c)));
         });
@@ -174,15 +173,27 @@ d3.json("js/data.json", function(error, json) {
                 var shift = tensionScale(i);
             }
             return "translate(" + shift + ",0)";
+        });
+
+    d3.selectAll('g.pov g.timeline')
+        .append('line')
+        .attr('x1', pov_tlinec)
+        .attr('y1', pad)
+        .attr('x2', pov_tlinec)
+        .attr('y2', function(d,i){
+            return flatBarScale.range()[1];
         })
-            .append('line')
-            .attr('x1', tlinec)
-            .attr('y1', 0)
-            .attr('x2', tlinec)
-            .attr('y2', function(d,i){
-                return flatBarScale.range()[1];
-            })
-            .attr('class', 'axis');
+        .attr('class', 'axis');
+
+    d3.selectAll('g.tension g.timeline')
+        .append('line')
+        .attr('x1', tension_tlinec)
+        .attr('y1', pad)
+        .attr('x2', tension_tlinec)
+        .attr('y2', function(d,i){
+            return flatBarScale.range()[1];
+        })
+        .attr('class', 'axis');
 
     // make pov path
     // path generator
