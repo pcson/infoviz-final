@@ -1,13 +1,14 @@
+svg line.axis {
+  stroke: #767676;
+  stroke-width: 1;
+  stroke-dasharray: 1,3;
+  shape-rendering: crispEdges;
+}
+svg g.pov path.pov {
+  fill: none;
+  stroke: #767676;
+}
 svg g.flat.top rect {
-  stroke: black;
+  stroke: #767676;
   stroke-width: 2px;
-}
-svg g.flat.top rect.what {
-  fill: red;
-}
-svg g.flat.top rect.steve {
-  fill: blue;
-}
-svg g.flat.top rect.fine {
-  fill: orange;
 }

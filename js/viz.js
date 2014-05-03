@@ -173,7 +173,29 @@ d3.json("js/data.json", function(error, json) {
                 var shift = tensionScale(i);
             }
             return "translate(" + shift + ",0)";
-        });
+        })
+            .append('line')
+            .attr('x1', tlinec)
+            .attr('y1', 0)
+            .attr('x2', tlinec)
+            .attr('y2', function(d,i){
+                return flatBarScale.range()[1];
+            })
+            .attr('class', 'axis');
+
+    // make pov path
+    // path generator
+    var povline = d3.svg.line()
+        .x(function(d){
+            return povScale(narratorlist.indexOf(charToClass(d.narrator))) + tlinec;
+        })
+        .y(vScaleCenter)
+        .interpolate('linear');
+
+    pov.datum(json)
+        .append("path")
+        .attr("d", povline)
+        .attr("class", "pov");
 
     // flat bar
     // this loop populates the other panels because the bar has everything
