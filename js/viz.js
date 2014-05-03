@@ -69,7 +69,7 @@ d3.json("js/data.json", function(error, json) {
 
     var flatBarScale = d3.scale.linear()
         .domain([0, json[json.length - 1].base + json[json.length - 1].words ])
-        .range([0, h]);
+        .range([pad, h - pad]);
 
     function vScaleCenter(d){
         // aligned with centers of flatBarScale segments
