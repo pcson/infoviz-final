@@ -71,11 +71,14 @@ d3.json("js/data.json", function(error, json) {
         .domain([0, json[json.length - 1].base + json[json.length - 1].words ])
         .range([pad, h - pad]);
 
+
+    // Sets the Y Coordinates
     function vScaleCenter(d){
         // aligned with centers of flatBarScale segments
         return flatBarScale(d.base) + (flatBarScale(d.words) / 2);
     }
 
+    // Creates the width
     function timelineWidth(panelw) {
         return (panelw - (pad * 2)) / narrators.length;
     }
@@ -108,6 +111,7 @@ d3.json("js/data.json", function(error, json) {
 
     //**************************************
     // functions
+    // This function are being called to draw it out on each row/y-axis
 
     function makeDots(d,i){
         var tline = d3.select("g.pov g." + charToClass(d.narrator));
@@ -135,17 +139,21 @@ d3.json("js/data.json", function(error, json) {
         });
     }
 
-    function makeOutline(d,i){
-        outline.append("text")
-            .datum(d)
-            .text(function(d){
-                return d.id;
-            })
-            .attr("y", vScaleCenter)
+
+    /// Stuff you edited
+    function makeOutline(d){
+       // append outline text to each flat bar segment; transition if necessary
+       d3.select(this.parentNode)
+            .append("text")
+            .text( function(d) {return d.chapter_id})
+            .attr('fill', 'black')
+            .attr('font-size', '20px')
+            .attr("y",vScaleCenter)
+            .attr("x", flatw + 10)
     }
 
-    function makeThemes(d,i) {
-        // do that
+    function makeThemes(d) {
+        // append theme text to each flat bar segment; transition if necessary
     }
 
     function makeContextualPopup(d,i){
@@ -175,6 +183,7 @@ d3.json("js/data.json", function(error, json) {
             return "translate(" + shift + ",0)";
         });
 
+
     d3.selectAll('g.pov g.timeline')
         .append('line')
         .attr('x1', pov_tlinec)
@@ -199,6 +208,8 @@ d3.json("js/data.json", function(error, json) {
     // path generator
     var povline = d3.svg.line()
         .x(function(d){
+            // This is drawing the path between nodes. This is what you have to do to get the x coordinates
+            // Width + padding amount.
             return povScale(narratorlist.indexOf(charToClass(d.narrator))) + pov_tlinec;
         })
         .y(vScaleCenter)
@@ -211,10 +222,11 @@ d3.json("js/data.json", function(error, json) {
 
     // flat bar
     // this loop populates the other panels because the bar has everything
-    flat.selectAll("rect")
+    flat.selectAll("g")
         .data(json)
         .enter()
-        .append("rect")
+        .append("g")
+            .append("rect")
             .attr("x", pad)
             .attr("width", flatw - pad*2)
             .attr("class", function(d){
