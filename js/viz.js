@@ -106,12 +106,28 @@ d3.json("js/data.json", function(error, json) {
 
     function makeDots(d,i){
         var tline = d3.select("g.pov g." + charToClass(d.narrator));
+
+        // draw dots in corresponding rows on the timelines for narrators
         tline.append("circle")
             .datum(d)
             .attr('r', 7)
+            .attr('opacity', 0.9)
             .attr('cx', tlinec)
             .attr('cy', vScaleCenter)
-            .attr('fill', colorScale(d.narrator));
+            .attr('fill', colorScale(charToClass(d.narrator)));
+
+        // draw smaller character dots
+        d.characters.forEach(function(c,i,a){
+            if (narratorlist.indexOf(charToClass(c)) == -1) return false;
+            var tline = d3.select("g.pov g." + charToClass(c));
+            tline.append("circle")
+                .datum(d)
+                .attr('r', 4)
+                .attr('opacity', 0.4)
+                .attr('cx', tlinec)
+                .attr('cy', vScaleCenter)
+                .attr('fill', colorScale(charToClass(c)));
+        });
     }
 
     function makeOutline(d,i){
@@ -160,7 +176,7 @@ d3.json("js/data.json", function(error, json) {
         });
 
     // flat bar
-    // this loop populates all the other panels because the bar has everything
+    // this loop populates the other panels because the bar has everything
     flat.selectAll("rect")
         .data(json)
         .enter()
@@ -177,7 +193,7 @@ d3.json("js/data.json", function(error, json) {
                 return flatBarScale(d.base);
             })
             .attr("fill", function(d){
-                return colorScale(d.narrator);
+                return colorScale(charToClass(d.narrator));
             })
             .each(makeDots) // fill in timelines
             .each(makeOutline) // fill in text outline
