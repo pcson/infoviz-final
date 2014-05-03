@@ -80,7 +80,8 @@ d3.json("js/data.json", function(error, json) {
         return (panelw - (pad * 2)) / narrators.length;
     }
 
-    var tlinec = timelineWidth(povw) / 2;
+    var pov_tlinec = timelineWidth(povw) / 2;
+    var tension_tlinec = timelineWidth(tensionw) / 2;
 
     function makePanelScale(panelw){
         // helper function for code reuse to scale to panel widths
@@ -99,6 +100,11 @@ d3.json("js/data.json", function(error, json) {
         narratorlist.push(charToClass(d.key));
     });
     colorScale.domain(narratorlist);
+
+    var tensionLineWidth = d3.scale.linear()
+        .domain([0,7])
+        .range([0, tension_tlinec]);
+
 
     //**************************************
     // functions
@@ -137,11 +143,6 @@ d3.json("js/data.json", function(error, json) {
                 return d.id;
             })
             .attr("y", vScaleCenter)
-    }
-
-    function makeTensionLines(d,i){
-        var tline = d3.select("g.tension g." + charToClass(d.narrator));
-        // add points to each tline, i have no idea
     }
 
     function makeThemes(d,i) {
@@ -187,7 +188,7 @@ d3.json("js/data.json", function(error, json) {
     // path generator
     var povline = d3.svg.line()
         .x(function(d){
-            return povScale(narratorlist.indexOf(charToClass(d.narrator))) + tlinec;
+            return povScale(narratorlist.indexOf(charToClass(d.narrator))) + pov_tlinec;
         })
         .y(vScaleCenter)
         .interpolate('linear');
@@ -219,8 +220,28 @@ d3.json("js/data.json", function(error, json) {
             })
             .each(makeDots) // fill in timelines
             .each(makeOutline) // fill in text outline
-            .each(makeTensionLines) // fill in tension lines
             .each(makeThemes) // fill in theme tags
             .each(makeContextualPopup); // fill in contextual info for hover/click
             // todo: make segments draggable
+
+    // draw tension lines
+    tension.selectAll('g.timeline')
+        .datum(function(d){return d.values;})
+        .append("polygon")
+        .attr("points", function(d){
+            var points = ""
+            d.forEach(function(c,i,a){
+                points += (tension_tlinec - tensionLineWidth(c.tension));
+                points += " " + vScaleCenter(c) + " ";
+            });
+            d.reverse();
+            d.forEach(function(c,i,a){
+                points += (tension_tlinec + tensionLineWidth(c.tension));
+                points += " " + vScaleCenter(c) + " ";
+            });
+            d.reverse();
+            return points;
+        })
+        .attr("fill", function(d){ return colorScale(charToClass(d[0].narrator)); })
+        .attr("stroke", function(d){ return colorScale(charToClass(d[0].narrator)); });
 });
