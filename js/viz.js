@@ -32,8 +32,7 @@ var outline = svg.append('g').attr("class", "outline top").attr("transform", "tr
 
 // add static elements (axes and labels and shit like that)
 // code tk
-var state = "chapters";
-
+var meta_state = 'chapters';
 // get the data async and populate the viz
 var data, narrators;
 d3.json("js/data.json", function(error, json) {
@@ -144,46 +143,50 @@ d3.json("js/data.json", function(error, json) {
     /// Stuff you edited
     function makeOutline(d){
        // append outline text to each flat bar segment; transition if necessary
-       // this.parentNode == g
        d3.select(this.parentNode)
+            .on('click', theme_click)
             .append("text")
-            .text( function(d) {return d.chapter_id})
+            .text( function(d) {return d.chapter_id + d.events})
+            .attr('fill', 'black')
             .attr('font-size', '5px')
-            .attr("font-family", "helvetica, arial, sans-serif")
             .attr("y",vScaleCenter)
             .attr("x", flatw + 10)
             .on("mouseover", mouseover)
-            .on("mouseout", mouseout)
-            .on("click", theme_click)
-            //.on("click", function(d) {d3.selectAll("text").text(d.themes)});
-            //.on("click", function(d) {d3.selectAll("text").text(d.chapter_id)});
+            .on("mouseout", mouseout);
+            
     }
 
+
     function mouseover(d) {
-        var nodeSelection = d3.select(this).style({"font-size":'14px'});
-        nodeSelection.select("text").style({"font-size":'5px'});
+        //var nodeSelection = 
+        d3.select(this).transition().duration(100).style({"font-size":'14px'});
+        //nodeSelection.select("text").style({"font-size":'5px'});
     }
 
     function mouseout(d) {
-        var nodeSelection = d3.select(this).style({"font-size":'5px'});
-        nodeSelection.select("text").style({"font-size":'14px'})
+        //var nodeSelection = 
+        d3.select(this).transition().duration(100).style({"font-size":'5px'});
+        //nodeSelection.select("text").style({"font-size":'14px'})
     }
 
-    
-    // 'this' refers to something else different from the this in makeOutline
     function theme_click(d) {
-        if (state === "themes") {
-            state = "chapters";
+        if (meta_state === "themes") {
+            meta_state = "chapters";
         } else {
-            state = "themes";
+            meta_state = "themes";
         }
         flat.selectAll("g text")
             .each(function(d){
-                var text = (state === "themes") ? d.themes : d.chapter_id;
+                var text = (meta_state === "themes") ? d.themes : d.chapter_id+ d.events;
                 d3.select(this).text(text);
             });
     }
 
+
+
+    function makeThemes(d) {
+        // append theme text to each flat bar segment; transition if necessary
+    }
 
     function makeContextualPopup(d,i){
         // do that
@@ -275,7 +278,6 @@ d3.json("js/data.json", function(error, json) {
             .each(makeThemes) // fill in theme tags
             .each(makeContextualPopup); // fill in contextual info for hover/click
             // todo: make segments draggable
-
 
     // draw tension lines
     tension.selectAll('g.timeline')
