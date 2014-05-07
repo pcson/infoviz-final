@@ -195,7 +195,7 @@ d3.json("js/data.json", function(err, json) {
         return points;
     }
 
-    /// Stuff you edited
+    /// Stuff Paul edited
     function makeOutline(d){
        // append outline text to each flat bar segment; transition if necessary
        // this.parentNode == g
@@ -218,21 +218,26 @@ d3.json("js/data.json", function(err, json) {
             .on("click", theme_click);
     }
 
+    var tooltip = d3.select("body").append("xhtml:div").attr("class","tooltip")
+
     function tool_tip(d) {
-        d3.select("tspan")
+        return tooltip
                 .style("visibility","visible")
                 .style("opacity", 0.9)
                 .style("font-size", "12px")
                 .style("font-family", "Arial")
+                .style("top", function() {return (d3.event.pageY + flatBarScale(d.words)/2)})
+                .style("left", 980)
                 .html(tool_text(d));
     }
 
+
     function tool_text(d) {
-        return "Notes: " + d.notes + "<br/>" + " POV: " + d.pov;
+        return "Notes: " + d.events + "<br/><br/>" + "POV: " + d.pov + "<br/><br/>" + "Location: " + d.location;
     }
 
     function tool_off(d) {
-            return d3.selectAll("tspan").style("visibility","hidden");
+            return d3.selectAll(".tooltip").style("visibility","hidden").style("opacity", 0);
     }
 
     function mouseover(d) {
@@ -283,6 +288,8 @@ d3.json("js/data.json", function(err, json) {
          })
         .on('dragstart',function(d,i){ // aka mousedown
             // don't do anything - see drag event
+            
+            // This turns off tool tip when you click and hold a segment
             tool_off(d)
         })
         .on('drag', function(d,i){
@@ -466,7 +473,7 @@ d3.json("js/data.json", function(err, json) {
             t.classed('highlighted', false)
                 .transition()
                 .attr('stroke', '#767676');
-            return tool_off(d);
+            tool_off(d);
         } else { // don't do this if you were clicking an already highlighted row
             flat.selectAll('.highlighted')
                 .classed('highlighted', false)
