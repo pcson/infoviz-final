@@ -1,11 +1,33 @@
 <html>
 <head>
+	<meta charset="utf-8">
     <link rel="stylesheet" href="css/style.css" />
+    <style>
+    rect text:hover {
+    	color: orange;	
+    }
+
+    #tooltip {
+        color: white;
+        opacity: .9;
+        background: #333;
+        padding: 5px;
+        border: 1px solid lightgrey;
+        border-radius: 5px;
+        position: absolute;
+        z-index: 10;
+        visibility: hidden;
+        white-space: nowrap;
+        pointer-events: none;
+        opacity: 0;
+      }
+    </style>
 </head>
 <body>
+	<div><tspan id="#tool_tip"></tspan> </div>
     
 <!--   scripts   -->
-<script src="js/d3.js"></script>
-<script src="js/viz.js"></script>
+<script src="js/d3.js" charset="utf-8"></script>
+<script src="js/viz.js" charset="utf-8"></script>
 </body>
 </html>
