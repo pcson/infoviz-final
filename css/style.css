@@ -1,3 +1,59 @@
+@import url(http://fonts.googleapis.com/css?family=Varela);
+body {
+  font-family: 'Varela', sans-serif;
+}
+div.header {
+  height: 60px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  min-width: 1200px;
+  background-color: rgba(255, 255, 255, 0.85);
+  box-sizing: border-box;
+  margin: 0 10px;
+}
+div.header div.pov,
+div.header div.tension,
+div.header div.chapters {
+  box-sizing: border-box;
+  position: relative;
+  float: left;
+  height: 100%;
+}
+div.header div.pov .title,
+div.header div.tension .title,
+div.header div.chapters .title {
+  text-align: center;
+  font-size: 24px;
+  margin-top: 5px;
+}
+div.header div.pov .label,
+div.header div.tension .label,
+div.header div.chapters .label {
+  position: absolute;
+  font-size: 12px;
+}
+div.header div.pov .label:nth-of-type(odd),
+div.header div.tension .label:nth-of-type(odd),
+div.header div.chapters .label:nth-of-type(odd) {
+  bottom: 0;
+}
+div.header div.pov .label:nth-of-type(even),
+div.header div.tension .label:nth-of-type(even),
+div.header div.chapters .label:nth-of-type(even) {
+  bottom: 12px;
+}
+div.header div.pov .toggle,
+div.header div.tension .toggle,
+div.header div.chapters .toggle {
+  width: 100%;
+  text-align: center;
+  font-size: 13px;
+}
+svg {
+  margin-top: 60px;
+}
 svg line.axis {
   stroke: #767676;
   stroke-width: 1;
@@ -9,6 +65,44 @@ svg g.pov path.pov {
   stroke: #767676;
 }
 svg g.flat.top rect {
-  stroke: #767676;
   stroke-width: 2px;
+}
+rect text:hover {
+  color: orange;
+}
+foreignObject {
+  width: 299px;
+}
+.tooltip {
+  color: orange;
+  opacity: .9;
+  background: #333;
+  padding: 5px;
+  border: 1px solid lightgrey;
+  border-radius: 5px;
+  position: absolute;
+  z-index: 10;
+  visibility: hidden;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  font-size: 12px;
+  width: 216px;
+  height: auto;
+  white-space: pre-wrap;
+  /* css-3 */
+  white-space: -moz-pre-wrap;
+  /* Mozilla, since 1999 */
+  white-space: -pre-wrap;
+  /* Opera 4-6 */
+  white-space: -o-pre-wrap;
+  /* Opera 7 */
+  word-wrap: break-word;
+  /* Internet Explorer 5.5+ */
+  -webkit-transition: .5s;
+  -moz-transition: .5s;
+  -ms-transition: .5s;
+  -o-transition: .5s;
+  transition: .5s;  
+
 }

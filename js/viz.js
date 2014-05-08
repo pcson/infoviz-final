@@ -16,8 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 // define some dimensions for padding and proportions
-var grid = 12, col = 100, w = col * grid, h = 900, pad = 10;
-var headh = 75;
+var grid = 12, col = 100, w = col * grid + 130, h = 650, pad = 10;
 
 // panel widths
 var povw = col * 4, tensionw = col * 5, flatw = col * 1, outlinew = col * 2; // multipliers should add up to grid
@@ -27,7 +26,6 @@ var barw = 40;
 var svg = d3.select("body").insert("svg", "script:first-of-type");
 svg.attr({"width": w, "height": h});
 
-// add the panels for each viz
 var pov = svg.append('g').attr("class", "pov top").attr("transform","translate(0,"+pad+")");
 var tension = svg.append('g').attr("class", "tension top").attr("transform", "translate("+ (povw) +","+pad+")");
 var flat = svg.append('g').attr("class", "flat_top").attr("transform", "translate("+ (povw + tensionw) +","+pad+")");
@@ -77,7 +75,6 @@ d3.json("js/data.json", function(err, json) {
         narratorlist.push(d.key.toLowerCase());
     });
     old_narratorlist = narratorlist.slice();
-
 
     // remove characters who aren't narrators
     json.forEach(function(d,i,a){
@@ -139,11 +136,22 @@ d3.json("js/data.json", function(err, json) {
     var tensionScale = makePanelScale(tensionw);
     var outlineScale = makePanelScale(outlinew);
 
-    var colorScale = d3.scale.category10(); // temporary; will choose real colors later
+    var colorScale = d3.scale.ordinal()
+         .range([
+             'rgb(251, 145, 0)',
+             'rgb(0, 155, 145)',
+             'rgb(210, 70, 13)',
+             'rgb(117, 159, 0)',
+             'rgb(167, 50, 87)',
+             'rgb(0, 80, 125)',
+             'rgb(182, 36, 31)',
+             'rgb(0, 117, 48)',
+             'rgb(81, 27, 71)'
+             ])
     narratorlist.forEach(function(d,i,a){
         a[i] = charToClass(d);
     })
-    colorScale.domain(narratorlist);
+    colorScale.domain(narratorlist.sort());
 
     var tensionLineWidth = d3.scale.linear()
         .domain([0,7])
@@ -202,23 +210,21 @@ d3.json("js/data.json", function(err, json) {
        d3.select(this.parentNode)
             .append("text")
             .text( function(d) {return d.chapter_id})
-            .attr('font-size', '5px')
+            .attr('font-size', '7px')
             .attr("font-family", "helvetica, arial, sans-serif")
             .attr("y",vScaleCenter)
-            .attr("x", flatw + 10)
+            .attr("x", 75)
             .on("mouseover", mouseover)
             .on("mouseout", mouseout)
-            .on("click", tool_tip);
+            .on("click", tool_tip).on("click", tool_off);
 
-            var button = d3.select(".flat_top").append("svg:circle")
-            .attr("cx",280)
-            .attr("cy", 10)
-            .attr("r",10)
-            .attr("fill", "orange")
+            var button = d3.select(".toggle")
             .on("click", theme_click);
     }
 
-    var tooltip = d3.select("body").append("xhtml:div").attr("class","tooltip")
+
+
+    var tooltip = d3.select("body").append("xhtml:div").attr("class","tooltip");
 
     function tool_tip(d) {
         return tooltip
@@ -233,7 +239,7 @@ d3.json("js/data.json", function(err, json) {
 
 
     function tool_text(d) {
-        return "Notes: " + d.events + "<br/><br/>" + "POV: " + d.pov + "<br/><br/>" + "Location: " + d.location;
+        return "<u>Events</u>: " + d.events + "<br/>" + "<u>POV</u>: " + d.pov + "<br/>" + "<u>Location</u>: " + d.location + "<br/>" + "<u>Notes</u>: " +d.notes;
     }
 
     function tool_off(d) {
@@ -241,13 +247,14 @@ d3.json("js/data.json", function(err, json) {
     }
 
     function mouseover(d) {
-        var nodeSelection = d3.select(this).style({"font-size":'14px'});
-        nodeSelection.select("text").style({"font-size":'5px'});
+
+    state === "chapters" ? d3.select(this).transition().style({"font-size":'12px'}).attr("x", 100) : d3.select(this).transition().style({"font-size":'12px'});
+        //nodeSelection.select("text").style({"font-size":'5px'});
     }
 
     function mouseout(d) {
-        var nodeSelection = d3.select(this).style({"font-size":'5px'});
-        nodeSelection.select("text").style({"font-size":'14px'})
+        var nodeSelection = d3.select(this).transition().style({"font-size":'7px'}).attr("x", 75);
+        nodeSelection.select("text").style({"font-size":'12px'})
     }
 
 
@@ -261,11 +268,9 @@ d3.json("js/data.json", function(err, json) {
         flat.selectAll("g text")
             .each(function(d){
                 var text = (state === "themes") ? d.themes : d.chapter_id;
-                d3.select(this).text(text);
+                d3.select(this).text(text)
             });
     }
-
-
 
     function makeContextualPopup(d,i){
         // do that
@@ -287,8 +292,6 @@ d3.json("js/data.json", function(err, json) {
             return {"x": 0, "y": parseFloat(target.attr('y'))};
          })
         .on('dragstart',function(d,i){ // aka mousedown
-            // don't do anything - see drag event
-            
             // This turns off tool tip when you click and hold a segment
             tool_off(d)
         })
@@ -461,6 +464,7 @@ d3.json("js/data.json", function(err, json) {
     // highlighting
     function makeHighlight(d,i){
         if (d3.event.defaultPrevented) return; // avoid conflict with drag
+        var oldstroke = flat.select('rect:not(.highlighted)').attr('stroke');
 
         // remove any existing highlight
         svg.select('rect.highlight')
@@ -468,22 +472,36 @@ d3.json("js/data.json", function(err, json) {
             .attr('opacity', 0)
             .remove();
 
-        var t = d3.select(this);
+        // return g to correct order
+        flat.selectAll('g').sort(baseSort);
+
+        if (this.nodeName.toLowerCase() == 'rect') var t = d3.select(this);
+        if (this.nodeName.toLowerCase() == 'circle') {
+            var char = d3.select(this.parentNode).attr('class').replace(' timeline', '');
+            var rect = d3.selectAll('.flat rect.' + char)[0][i];
+            var t = d3.select(rect);
+        }
+
         if (t.classed('highlighted')) {
             t.classed('highlighted', false)
                 .transition()
-                .attr('stroke', '#767676');
-            tool_off(d);
+                .attr('stroke', oldstroke);
+
         } else { // don't do this if you were clicking an already highlighted row
+            // move target g to top
+            var g = this.parentNode;
+            g.parentNode.appendChild(g);
+
             flat.selectAll('.highlighted')
                 .classed('highlighted', false)
                 .transition()
-                .attr('stroke', '#767676');
+                .attr('stroke', oldstroke);
 
             t.classed('highlighted', true)
                 .transition()
                 .duration(500)
                 .attr('stroke', '#000000');
+
             svg.insert('rect', 'g')
                 .attr('width', w)
                 .attr('height', t.attr('height'))
@@ -495,11 +513,7 @@ d3.json("js/data.json", function(err, json) {
                     .duration(500)
                     .attr('opacity', 1);
             return tool_tip(d);
-
         }
-
-
-
     }
 
 
@@ -531,6 +545,10 @@ d3.json("js/data.json", function(err, json) {
             }
             return shift;
         })
+        .style('color', function(d){
+            return colorScale(charToClass(d.key));
+        });
+
     header.select('div.pov')
         .insert('div', 'div')
         .attr('class', 'title')
@@ -600,13 +618,14 @@ d3.json("js/data.json", function(err, json) {
         .enter()
             .append('circle')
             .classed('narrator', true)
-            .attr('r', 8)
+            .attr('r', 7)
             .attr('opacity', 0.8)
             .attr('cx', pov_tlinec)
             .attr('cy', vScaleCenter)
             .attr('fill', function(d){
                 return colorScale(charToClass(d.narrator));
-            });
+            })
+            .on('click', makeHighlight);
 
     // make secondary character dots
     pov_tlines.selectAll('circle.character')
@@ -616,7 +635,7 @@ d3.json("js/data.json", function(err, json) {
         .enter()
             .append('circle')
             .classed('character', true)
-            .attr('r', 5)
+            .attr('r', 4)
             .attr('opacity', 0.4)
             .attr('cx', pov_tlinec)
             .attr('cy', vScaleCenter)
@@ -648,7 +667,8 @@ d3.json("js/data.json", function(err, json) {
             .attr("fill", function(d){
                 return colorScale(charToClass(d.narrator));
             })
-            .attr("stroke", " #767676")
+            .attr("stroke", " #ffffff")
+            .attr('stroke-width', 0.5)
             .each(makeOutline) // fill in text outline
             .each(makeContextualPopup); // fill in contextual info for hover/click
 
